@@ -76,49 +76,46 @@ def a_star_search(board: Board, heuristic: Callable[[Board], int]):
             
         # Declare initial values like the root node (the initial board) and the solution set used to create that board or state.
         pq = []
-        id = 0
-        nodes_explored = 0
-        max_nodes_explored = 10000
+        max_nodes_explored = 9000
         visited_states = {}
+        id = 1
         heapq.heappush(pq, [heuristic(board), id, (board, [])])
 
 
         # While there are still children to explore in the queue, continue popping them off and exploring them.
-        while (len(pq) > 0 and max_nodes_explored >= nodes_explored):
+        while (len(pq) > 0 and max_nodes_explored >= id):
             *_, (current_state, solution) = heapq.heappop(pq)
             solution = copy.copy(solution)
             visited_states[str(current_state.state)] = True
 
-
+            # If goal state has been found, we break the loop.
             if (board.check_solution(solution)):
                 break
-            # After checking if the board's a solution, we increment the nodes_searched counter.
-            nodes_explored += 1
 
             # From the currently selected node, add its children to the priority queue.
             for child_node, direction in current_state.next_action_states():
 
                 # If node hasn't been visited already, we should add it to the queue. 
-                # Otherwise, we should move on to the next node.
+                # Otherwise, we should move on to the next child node.
                 if str(child_node.state) in visited_states.keys():
                     continue
 
                 solution.append(direction)
-                id += 1
             
-                # The value should be the heuristic (estimate of the cost to get to the solution)
+                # The child node's value in the pq should be the child node's heuristic 
+                # (estimate of the cost to get to the goal state from the child node)
                 # and the cost taken to get to the child node. The next node we explore
                 # should have the lowest cost function 
-                # (smallest value of heuristic + smallest solution length).
+                # (smallest value of heuristic + smallest solution length) to find
+                # the optimal solution.
                 cost_function = heuristic(child_node) + len(solution)
+                id += 1
                 heapq.heappush(pq, [cost_function, id, (child_node, copy.copy(solution))])
 
-                # Pop off last direction from the solution so we can check another transition model.
+                # Pop off last direction from the solution so we can check another transition model
+                # (child node).
                 solution.pop()
 
-
-            # Once the children of the currently explored node are appended to the queue,
-            # we expand the next node in the queue. 
-
-
-        return solution
+        # id represents all the states (nodes) that have been generated (id starts at 1 when the first state
+        # is put in the priority queue).
+        return solution, id
